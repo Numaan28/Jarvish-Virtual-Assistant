@@ -3,15 +3,14 @@ import webbrowser
 import pyttsx3
 import requests
 import pyjokes
-import wikipedia
 from datetime import datetime
 
 newsapi = "0c85e636ce6f4fd28d758b1a169596d2"
 
 def speak(text):
-    engine = pyttsx3.init('sapi5')  # Force Windows SAPI5 voice engine
+    engine = pyttsx3.init('sapi5')
     voices = engine.getProperty('voices')
-    engine.setProperty('voice', voices[0].id)  # Try voices[1] if needed
+    engine.setProperty('voice', voices[0].id)
     engine.setProperty('rate', 150)
     engine.setProperty('volume', 1.0)
     print(f"Jarvis: {text}")
@@ -65,7 +64,7 @@ def processcommand(c):
         joke = pyjokes.get_joke()
         speak(joke)
 
-    elif "who are you" in c or ("who" in c and "you" in c):
+    elif "who are you" in c:
         speak("I am Jarvis, your virtual assistant.")
 
     elif "who made you" in c or "who created you" in c:
@@ -74,13 +73,16 @@ def processcommand(c):
     elif "who is" in c or "what is" in c or "tell me about" in c or "when did" in c:
         speak("Let me search that for you...")
         try:
-            query = c.replace("who is", "").replace("what is", "").replace("tell me about", "").strip()
-            result = wikipedia.summary(query, sentences=2)
-            speak(result)
-        except wikipedia.exceptions.DisambiguationError:
-            speak("Your query is too broad. Please be more specific.")
-        except wikipedia.exceptions.PageError:
-            speak("Sorry, I couldn't find any result for that.")
+            query = c.replace("who is", "").replace("what is", "").replace("tell me about", "").replace("when did", "").strip()
+            response = requests.get(f"https://api.duckduckgo.com/?q={query}&format=json")
+            data = response.json()
+            answer = data.get("AbstractText")
+
+            if answer:
+                speak(answer)
+            else:
+                speak("Sorry, I couldn't find a direct answer. Opening browser for more info.")
+                webbrowser.open(f"https://duckduckgo.com/?q={query}")
         except Exception as e:
             speak("Something went wrong while searching.")
             print(e)
@@ -116,5 +118,3 @@ if __name__ == "__main__":
             print("Didn't understand. Please try again.")
         except Exception as e:
             print(f"Error: {e}")
-
-# code by salman github = numaan28
